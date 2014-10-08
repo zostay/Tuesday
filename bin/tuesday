@@ -1,0 +1,116 @@
+#!/usr/bin/env perl
+package Bot::Backbone::Backbone::Backbone;
+use Bot::Backbone;
+
+my %features = (
+    backbone => {
+        server     => 'perl_irc',
+        code_name  => 1,
+        dice       => 1,
+        hailo      => 1,
+        insult     => 'pirate',
+        karma      => 1,
+        keyword    => 1,
+        predicate  => 1,
+        link_title => 1,
+    },
+    geeklunch => {
+        server     => 'freenode_irc',
+        code_name  => 1,
+        dice       => 1,
+        hailo      => 1,
+        insult     => 'GeekLunch',
+        karma      => 1,
+        keyword    => 1,
+        predicate  => 1,
+        link_title => 1,
+    },
+);
+
+send_policy do_not_flood => (
+    MinimumInterval => {
+        interval => 1,
+    },
+);
+
+service perl_irc => (
+    service     => 'IRChat',
+    nick        => 'backbone',
+    server      => 'irc.perl.org',
+    send_policy => 'do_not_flood',
+);
+
+service freenode_irc => (
+    service     => 'IRChat',
+    nick        => 'tuesday',
+    server      => 'chat.freenode.net',
+    send_policy => 'do_not_flood',
+);
+
+service dice => (
+    service => 'OFun::Dice',
+);
+
+service link_title => (
+    service => 'Web::LinkTitle',
+);
+
+for my $channel (sort keys %features) {
+    my $features = $features{$channel};
+    service "${channel}_chat" => (
+        service    => 'GroupChat',
+        chat       => $features->{server},
+        group      => $channel,
+        dispatcher => "${channel}_dispatch",
+    );
+
+    service "${channel}_code_name" => (
+        service         => 'OFun::CodeName',
+        nouns_file      => 'var/shared/nouns.txt',
+        adjectives_file => 'var/shared/adjectives.txt',
+        db_dsn          => "dbi:SQLite:var/${channel}/codename.db",
+    ) if $features->{code_name};
+
+    service "${channel}_hailo" => (
+        service    => 'OFun::Hailo',
+        brain_file => "var/${channel}/brain.db",
+    ) if $features->{hailo};
+
+    service "${channel}_insult" => (
+        service  => 'OFun::Insult',
+        language => $features->{insult},
+    ) if $features->{insult};
+
+    service "${channel}_karma" => (
+        service => 'OFun::Karma',
+        db_dsn  => "dbi:SQLite:var/${channel}/karma.db",
+    ) if $features->{karma};
+
+    service "${channel}_keyword" => (
+        service => 'Fact::Keyword',
+        db_dsn  => "dbi:SQLite:var/${channel}/keyword.db",
+    ) if $features->{keyword};
+
+    service "${channel}_predicate" => (
+        service => 'Fact::Predicate',
+        db_dsn  => "dbi:SQLite:var/${channel}/predicate.db",
+        accepted_copula => [ qw( is isn't are aren't says ) ],
+    ) if $features->{predicate};
+
+    dispatcher "${channel}_dispatch" => as {
+        redispatch_to "${channel}_code_name" if $features->{code_name};
+        redispatch_to "dice"                 if $features->{dice};
+        redispatch_to "${channel}_insult"    if $features->{insult};
+        redispatch_to "${channel}_karma"     if $features->{karma};
+        redispatch_to "${channel}_keyword"   if $features->{keyword};
+        redispatch_to "${channel}_predicate" if $features->{predicate};
+
+        redispatch_to "link_title"           if $features->{link_title};
+
+        redispatch_to "${channel}_hailo"     if $features->{hailo};
+    };
+}
+
+print "Running...\n";
+my $bot = __PACKAGE__->new;
+$bot->run;
