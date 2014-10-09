@@ -2,6 +2,9 @@
 package Bot::Backbone::Backbone::Backbone;
 use Bot::Backbone;
 
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
 my %features = (
     backbone => {
         server     => 'perl_irc',
