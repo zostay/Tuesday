@@ -28,7 +28,17 @@ my %features = (
         predicate  => 1,
         link_title => 1,
     },
-    flinthills_io => {
+    C219G3CQM => {
+        server     => 'flinthills_slack',
+        code_name  => 1,
+        dice       => 1,
+        hailo      => 1,
+        insult     => 'GeekLunch',
+        karma      => 1,
+        keyword    => 1,
+        predicate  => 1,
+    },
+    C21995NQG => {
         server     => 'flinthills_slack',
         code_name  => 1,
         dice       => 1,
