@@ -16,6 +16,7 @@ my %features = (
         keyword    => 1,
         predicate  => 1,
         link_title => 1,
+        glotio     => 1,
     },
     geeklunch => {
         server     => 'freenode_irc',
@@ -27,6 +28,7 @@ my %features = (
         keyword    => 1,
         predicate  => 1,
         link_title => 1,
+        glotio     => 1,
     },
     C219G3CQM => {
         server     => 'flinthills_slack',
@@ -37,6 +39,7 @@ my %features = (
         karma      => 1,
         keyword    => 1,
         predicate  => 1,
+        glotio     => 1,
     },
     C21995NQG => {
         server     => 'flinthills_slack',
@@ -47,6 +50,7 @@ my %features = (
         karma      => 1,
         keyword    => 1,
         predicate  => 1,
+        glotio     => 1,
     },
 );
 
@@ -77,6 +81,11 @@ service flinthills_slack => (
 
 service dice => (
     service => 'OFun::Dice',
+);
+
+service glotio => (
+    service => 'GlotIO',
+    token   => $ENV{GLOTIO_TOKEN},
 );
 
 service link_title => (
@@ -128,6 +137,7 @@ for my $channel (sort keys %features) {
     dispatcher "${channel}_dispatch" => as {
         redispatch_to "${channel}_code_name" if $features->{code_name};
         redispatch_to "dice"                 if $features->{dice};
+        redispatch_to "glotio"               if $features->{glotio};
         redispatch_to "${channel}_insult"    if $features->{insult};
         redispatch_to "${channel}_karma"     if $features->{karma};
         redispatch_to "${channel}_keyword"   if $features->{keyword};
